@@ -28,7 +28,7 @@ class VesselSegmenter:
 
     def __init__(self, model_path):
 
-        checkpoint = torch.load(model_path, map_location="cpu")
+        checkpoint = torch.load(model_path, map_location="cpu", weights_only=False)
 
         if "model_state_dict" in checkpoint:
             state_dict = checkpoint["model_state_dict"]
@@ -46,6 +46,8 @@ class VesselSegmenter:
     def segment(self, image):
 
         tensor = preprocess_for_unet(image)
+
+        tensor = tensor.to(next(self.model.parameters()).device)
 
         with torch.no_grad():
             output = self.model(tensor)

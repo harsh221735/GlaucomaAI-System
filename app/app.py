@@ -1,12 +1,24 @@
 from fastapi import FastAPI, UploadFile
 import cv2
 import numpy as np
+import base64
 
 from inference.pipeline import run_pipeline
 from explainability.gradcam import generate_gradcam
 from llm.ollama_service import ask_llm
 
 app = FastAPI(title="Glaucoma AI System")
+
+
+# 🔥 Helper: Convert image → base64 string
+def encode_image(image_array):
+    # Ensure uint8 format
+    if image_array.dtype != np.uint8:
+        image_array = (image_array * 255).astype(np.uint8)
+
+    _, buffer = cv2.imencode(".png", image_array)
+    encoded = base64.b64encode(buffer).decode("utf-8")
+    return encoded
 
 
 @app.post("/predict")
@@ -19,11 +31,14 @@ async def predict(file: UploadFile):
 
     heatmap = generate_gradcam(image)
 
+    # 🔥 Encode heatmap for JSON response
+    heatmap_encoded = encode_image(heatmap)
+
     return {
         "prediction": result["prediction"],
         "cdr": result["cdr"],
         "vessel_risk": result["vessel_risk"],
-        "gradcam": heatmap
+        "gradcam": heatmap_encoded   # ✅ now renderable
     }
 
 
