@@ -22,6 +22,7 @@ def run_pipeline(image):
 
     return {
         "prediction": prediction.tolist(),
+        "bounding_boxes":[disc_box,cup_box],
         "cdr": float(cdr),
         "vessel_risk": float(vessel_risk)
     }
